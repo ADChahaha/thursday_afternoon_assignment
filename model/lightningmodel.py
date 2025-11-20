@@ -1,17 +1,16 @@
 import lightning
 import torchmetrics
-import torchvision
 import torch
+from model import Model
 
 
 class MyModel(lightning.LightningModule):
-    def __init__(self, lr=1e-3):
+    def __init__(self, lr=1e-3, num_classes=0):
         super().__init__()
-        model = torchvision.models.resnet18()
-        model.fc = torch.nn.Linear(512, 10)
+        model = Model()
         self.model = model
         self.criterion = torch.nn.CrossEntropyLoss()
-        self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.lr = lr
 
     def training_step(self, batch):
@@ -29,3 +28,5 @@ class MyModel(lightning.LightningModule):
         loss = self.criterion(y, label)
         self.log("val_loss", loss, prog_bar=True)
         self.log("val_acc", self.val_acc(y, label), prog_bar=True)
+
+        
