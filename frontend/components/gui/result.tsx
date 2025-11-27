@@ -4,7 +4,13 @@ import React from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardTitle,
+  CardDescription,
+  CardHeader
+} from "@/components/ui/card";
 
 interface Props {
   imageFile: File | null;
@@ -37,6 +43,10 @@ export default function Result({ imageFile }: Props) {
 
   return (
     <Card className="flex flex-col gap-2 p-4">
+      <CardHeader>
+        <CardTitle className="">Result</CardTitle>
+      </CardHeader>
+
       <Button
         className="select-none"
         onClick={() => refetch()}

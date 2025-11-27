@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "../ui/label";
 import { cn } from "@/lib/utils"; // 或你自己封装的 cn
 
@@ -29,7 +35,11 @@ export default function ImageUploader({ setImageFile }: Props) {
 
   return (
     <Card className="flex flex-col gap-2 p-4">
+      <CardHeader>
+        <CardTitle className="">ImageInput</CardTitle>
+      </CardHeader>
       {/* shadcn Input type="file" */}
+
       <Input
         key={preview}
         id="image-input"
@@ -49,12 +59,12 @@ export default function ImageUploader({ setImageFile }: Props) {
         className={cn("grid gap-2", preview ? "grid-cols-2" : "grid-cols-1")}
       >
         <Label htmlFor="image-input" className="block">
-          <Button variant="default" asChild className="w-full" size="sm">
+          <Button variant="default" asChild className="w-full" >
             <span>选择图片</span>
           </Button>
         </Label>
         {preview && (
-          <Button onClick={handleRemove} variant="destructive" size="sm">
+          <Button onClick={handleRemove} variant="destructive" >
             移除图片
           </Button>
         )}
