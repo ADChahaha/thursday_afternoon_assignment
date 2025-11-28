@@ -37,7 +37,7 @@ class ImageProcessor:
 
     def cam(self):
         # 待实现
-        pass
+        return []
 
     def __idx2type__(self, idx):
         """将模型识别的idx转换为文本
