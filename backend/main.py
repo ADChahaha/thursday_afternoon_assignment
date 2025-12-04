@@ -20,7 +20,15 @@ app = FastAPI()
 
 
 @app.post("/detect")
-async def detect(file: UploadFile = File(...)):
+async def detect(file: UploadFile = File(...)) -> dict:
+    """_summary_
+
+    Args:
+        file (UploadFile, optional): Assume to be an image with width and length > 0
+
+    Returns:
+        return: {"type": , "cam": } 
+    """
     contents = await file.read()
     # 转成 BytesIO 对象
     image_stream = io.BytesIO(contents)
