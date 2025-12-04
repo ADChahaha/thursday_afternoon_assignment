@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 import torchvision
 import lightning
-from dataset import TrainDataset, ValDataset
+from data.dataset import TrainDataset
 
 
 class MyDataModule(lightning.LightningDataModule):
@@ -16,8 +16,8 @@ class MyDataModule(lightning.LightningDataModule):
 
     def setup(self, stage):
         transform = torchvision.transforms.ToTensor()
-        self.train_dataset = TrainDataset(transform=transform)
-        self.val_dataset = ValDataset(transform=transform)
+        self.train_dataset = TrainDataset(is_train=True, args=args)
+        self.val_dataset =TrainDataset(is_train=False, args=args)
 
     def train_dataloader(self):
         return DataLoader(
