@@ -1,16 +1,17 @@
 import torch
 from lightningmodel import MyModel
 from torchvision import transforms
+import PIL
 
 
 class ImageProcessor:
 
-    def __init__(self, ckpt_path):
+    def __init__(self, ckpt_path: str) -> None:
         self.model: torch.nn.Module = MyModel.load_from_checkpoint(ckpt_path)
         self.model.eval()
-        self.img: torch.tensor = None
+        self.img: torch.tensor
 
-    def set_image(self, img):
+    def set_image(self, img: PIL.Image | list[PIL.Image]) -> None:
         """设置图像用于后续处理
 
         Args:
@@ -25,11 +26,11 @@ class ImageProcessor:
             tensor = transform(img)
             self.img = tensor.unsqueeze(dim=0)
 
-    def eval(self):
+    def eval(self) -> list:
         """将内部的image全部识别
 
         Returns:
-            list[str]
+            返回所有图像的类别的数组
         """
         y = self.model(self.img)  # (batch_size, num_class)
         idx = torch.argmax(y, dim=1)  # idx shape: (batch_size,)
@@ -39,11 +40,11 @@ class ImageProcessor:
         # 待实现
         return []
 
-    def __idx2type__(self, idx):
+    def __idx2type__(self, idx: int) -> str:
         """将模型识别的idx转换为文本
 
         Args:
-            idx (int): 模型生成的idx
+            idx (int): 模型生成的idx 假设为0或1 
 
         Returns:
             str: 下标对应的文本描述
