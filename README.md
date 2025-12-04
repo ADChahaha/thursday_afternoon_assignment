@@ -1,12 +1,15 @@
 # 本项目为机器学习课程实践课程的仓库
 
-## 训练方法 
+
+启动方法
+
+前端
 ```zsh
-python model/train.py fit -c config.yaml
+npm --prefix frontend run start -- -H 0.0.0.0
+
 ```
 
-
-## 推理(待完成)
+后端
 ```zsh
-
+uvicorn src/main:app 
 ```
