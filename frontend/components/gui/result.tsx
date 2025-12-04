@@ -9,7 +9,7 @@ import {
   CardContent,
   CardTitle,
   CardDescription,
-  CardHeader
+  CardHeader,
 } from "@/components/ui/card";
 
 interface Props {
@@ -36,7 +36,10 @@ export default function Result({ imageFile }: Props) {
   };
 
   const { data, refetch, isFetching } = useQuery({
-    queryKey: ["process", imageFile],
+    queryKey: [
+      "process",
+      imageFile ? imageFile.name + "-" + imageFile.lastModified : "empty",
+    ],
     queryFn: fetchResult,
     enabled: false,
   });
@@ -58,7 +61,12 @@ export default function Result({ imageFile }: Props) {
       {data && (
         <CardContent className="flex flex-col gap-2 mt-2 items-center">
           <p>类型：{data.type}</p>
-          <img src={data.cam} alt="processed" className="w-48 h-auto rounded" />
+
+          <img
+            src={`data:image/jpeg;base64,${data.cam}`}
+            alt="processed"
+            className="w-48 h-auto rounded"
+          />
         </CardContent>
       )}
     </Card>

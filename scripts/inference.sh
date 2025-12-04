@@ -10,5 +10,5 @@ python inference.py \
         --eval_data_path $inference_images \
         --batch_size 1 \
         --output_dir $RESUME_PATH \
-        --resume '/home/yukino/MachineLearningPractice/results/ResNet-50/20251203_161301/checkpoint-best.pth' \
+        --resume $RESUME_PATH/checkpoint-best.pth \
         --eval True

@@ -9,23 +9,29 @@ from typing import Any, cast, Dict, List, Optional, Union
 import numpy as np
 
 model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    "resnet18": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
+    "resnet34": "https://download.pytorch.org/models/resnet34-333f7ec4.pth",
+    "resnet50": "https://download.pytorch.org/models/resnet50-19c8e357.pth",
+    "resnet101": "https://download.pytorch.org/models/resnet101-5d3b4d8f.pth",
+    "resnet152": "https://download.pytorch.org/models/resnet152-b121ed2d.pth",
 }
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
+    return nn.Conv2d(
+        in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
+    )
+
 
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
+
 class BasicBlock(nn.Module):
     """Basic residual connection block"""
+
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
@@ -55,11 +61,13 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
 
         return out
-    
+
+
 class Bottleneck(nn.Module):
     """Bottleneck residual connection block"""
+
     expansion = 4
-    
+
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         self.conv1 = conv1x1(inplanes, planes)
@@ -71,7 +79,7 @@ class Bottleneck(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-    
+
     def forward(self, x):
         identity = x
 
@@ -94,15 +102,25 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=2, zero_init_residual=False):
+    def __init__(
+        self,
+        block=Bottleneck,
+        layers=[3, 4, 6, 3],
+        num_classes=2,
+        zero_init_residual=False,
+    ):
         super(ResNet, self).__init__()
 
         self.unfoldSize = 2
         self.unfoldIndex = 0
         assert self.unfoldSize > 1
-        assert -1 < self.unfoldIndex and self.unfoldIndex < self.unfoldSize*self.unfoldSize
+        assert (
+            -1 < self.unfoldIndex
+            and self.unfoldIndex < self.unfoldSize * self.unfoldSize
+        )
         # input process
         self.inplanes = 64
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
@@ -110,7 +128,7 @@ class ResNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         # resnet layers
-        self.layer1 = self._make_layer(block, 64 , layers[0])
+        self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         # classification head
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -119,7 +137,7 @@ class ResNet(nn.Module):
         # parameter initialization(using He initialization)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
@@ -148,20 +166,27 @@ class ResNet(nn.Module):
             layers.append(block(self.inplanes, planes))
         return nn.Sequential(*layers)
 
-    def _preprocess_dwt(self, x, mode='symmetric', wave='bior1.3'):
-        '''小波变换后取HH方向高频分量'''
-        '''pip install pywavelets pytorch_wavelets'''
+    def _preprocess_dwt(self, x, mode="symmetric", wave="bior1.3"):
+        """小波变换后取HH方向高频分量"""
+        """pip install pywavelets pytorch_wavelets"""
         from pytorch_wavelets import DWTForward, DWTInverse
+
         DWT_filter = DWTForward(J=1, mode=mode, wave=wave).to(x.device)
         Yl, Yh = DWT_filter(x)
         return transforms.Resize([x.shape[-2], x.shape[-1]])(Yh[0][:, :, 2, :, :])
 
     def _preprocess_fft(self, x, scale=8):
         from torch.nn import functional as F
+
         x = torch.fft.fft2(x, norm="ortho")
         x = torch.fft.fftshift(x, dim=[-2, -1])
         b, c, h, w = x.shape
-        x[:, :, h//2-h//scale:h//2+h//scale, w//2-w//scale:w//2+w//scale] = 0.0
+        x[
+            :,
+            :,
+            h // 2 - h // scale : h // 2 + h // scale,
+            w // 2 - w // scale : w // 2 + w // scale,
+        ] = 0.0
         x = torch.fft.ifftshift(x, dim=[-2, -1])
         x = torch.fft.ifft2(x, norm="ortho")
         x = torch.real(x)
@@ -170,13 +195,20 @@ class ResNet(nn.Module):
 
     def _preprocess_dct(self, x, diagonal=64):
         from scipy.fftpack import dct, idct
+
         device = x.device
         x = x.cpu()
         b, c, h, w = x.shape
-        x = torch.tensor(dct(dct(x.numpy(), axis=-1, norm='ortho'), axis=-2, norm='ortho'))
-        mask = torch.rot90(torch.tril(torch.ones(h, w), diagonal=diagonal).bool(), k=-1, dims=(0, 1))
+        x = torch.tensor(
+            dct(dct(x.numpy(), axis=-1, norm="ortho"), axis=-2, norm="ortho")
+        )
+        mask = torch.rot90(
+            torch.tril(torch.ones(h, w), diagonal=diagonal).bool(), k=-1, dims=(0, 1)
+        )
         x[:, :, mask] = 0
-        x = torch.tensor(idct(idct(x.numpy(), axis=-1, norm='ortho'), axis=-2, norm='ortho'))
+        x = torch.tensor(
+            idct(idct(x.numpy(), axis=-1, norm="ortho"), axis=-2, norm="ortho")
+        )
         return x.to(device)
 
     def _preprocess_edge(self, x):
@@ -184,9 +216,12 @@ class ResNet(nn.Module):
 
     def _preprocess_NPR(self, x, factor=0.5):
         return F.interpolate(
-            F.interpolate(x, scale_factor=factor, mode='nearest', recompute_scale_factor=True), 
-            scale_factor=1/factor, 
-            mode='nearest', recompute_scale_factor=True
+            F.interpolate(
+                x, scale_factor=factor, mode="nearest", recompute_scale_factor=True
+            ),
+            scale_factor=1 / factor,
+            mode="nearest",
+            recompute_scale_factor=True,
         )
 
     def forward(self, x):
@@ -207,6 +242,7 @@ class ResNet(nn.Module):
 
         return x
 
+
 def resnet50(pretrained=True, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
@@ -214,6 +250,6 @@ def resnet50(pretrained=True, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        state_dict = torch.load('checkpoint/checkpoint-best.pth')
-        model.load_state_dict(state_dict['model'])
+        state_dict = torch.load("checkpoint/checkpoint-best.pth")
+        model.load_state_dict(state_dict["model"])
     return model
